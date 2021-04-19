@@ -1,0 +1,74 @@
+#include <string>
+#include <vector>
+#include <stack>
+#include <map>
+
+#ifndef _CLASS_CAL_H_
+#define _CLASS_CAL_H_   //避免再次定義class Calculater
+
+using c_type = long long;   //利用c_type指定運算值的類型(無法使用浮點數(%運算))
+
+class Calculater {
+private:
+
+    //特殊字句
+    enum Special {
+        Shang_xiang, TK888, MIKU, MIKU3939, OuO, C8763, NEKOPARA,
+    };
+
+    //利用 map
+    std::map<char, int> ops = { //搜尋運算子和運算優先度
+        {'^', 3}, {'e', 3}, {'c', 3}, {'p', 3}, {'!', 3},
+        {'*', 2}, {'/', 2}, {'%', 2},
+        {'+', 1}, {'-', 1},
+        {'|', 0},
+    };
+    std::map<char, int> operand = { //取得運算子的運算元個數
+        {'^', 2}, {'e', 2}, {'c', 2}, {'p', 2}, {'*', 2}, {'/', 2}, {'%', 2}, {'+', 2}, {'-', 2},
+        {'!', 1}, {'|', 1},
+    };
+    std::map<std::string, Special> spes = { //找尋特殊字句
+       {R"(\|/)", Shang_xiang}, {"tk888", TK888}, {"miku", MIKU}, {"miku3939", MIKU3939},
+       {"ouo", OuO}, {"c8763", C8763}, {"48763", C8763}, {"nekopara", NEKOPARA},
+    };
+
+    bool divide_zero;       //有除以零的判斷
+    bool wrong_absolute;    //錯誤的絕對值數判斷
+    bool wrong_brackets;    //錯誤的括號判斷
+    bool wrong_expression;  //有少的運算子判斷
+    bool wrong_input;       //錯誤的運算式判斷(沒有數字)
+    bool wrong_operation;   //沒有的運算元判斷
+    bool first_calculate;   //第一次的計算判斷
+    bool have_answer;       //算是有無 ans
+    bool exit;  //離開判斷
+
+    bool is_wrong(const std::string &); //檢查有無錯誤
+    void warning_message();     //錯誤訊息
+    bool is_operator(char);     //是否為擁有的運算子(char 型態)
+    bool is_operator(const std::string &);  //是否為擁有的運算子(std::string 型態)
+    int pripority(char);    //查看運算子的優先度
+    bool is_number(char);   //檢查是否為數字
+    bool is_integer(char, char, char);  //檢查是否為數字(有正負數的情況)
+    bool is_space(char);    //檢查是否為空白(space與tab)
+    void to_lower(std::string &);  //把運算式的所有字母轉為小寫
+    void combine(std::string &);    //合併不需要的括號與正負號
+    void combine_add_sub(std::string &, std::string &, std::string &, int, int, char);    //合併不需要的正負號
+    unsigned infix_to_postfix(std::vector<std::string> &, const std::string &, const c_type &, const unsigned start = 0, const char input_op = '\0');   //把輸入的運算式拆解成後綴式
+    c_type calcul_postfix(const std::vector<std::string> &);   //運算後綴式的結果
+    c_type factorial(const c_type &);     //計算階乘
+    c_type power(const c_type &, const c_type &);    //計算指數(只有正整數的次方數)
+    bool is_special(const std::string &, Special &);    //是否為特殊字句
+    void print_special(const Special &);    //印出特殊字句的特殊輸出
+
+public:
+    Calculater();   //一般建構式
+    Calculater(bool);   //呼叫一般建構式並設定first_calculate
+    bool string_calculate(std::string &, c_type &);    //呼叫運算式分解並計算
+    c_type op_calculate(char, const c_type &, const c_type &back = 0);  //呼叫運算元做計算
+    bool is_exit(); //檢查是否須離開
+    static void m_delay(int);  //以毫秒為單位的延遲
+    static void print_dash();  //印出分行(----)
+
+};
+
+#endif
