@@ -38,6 +38,7 @@ private:
     bool wrong_expression;  //有少的運算子判斷
     bool wrong_input;       //錯誤的運算式判斷(沒有數字)
     bool wrong_operation;   //沒有的運算元判斷
+    bool brackets_have_nothing; //括號裡沒東西
     bool first_calculate;   //第一次的計算判斷
     bool have_answer;       //算是有無 ans
     bool exit;  //離開判斷
@@ -57,6 +58,7 @@ private:
     c_type calcul_postfix(const std::vector<std::string> &);   //運算後綴式的結果
     c_type factorial(const c_type &);     //計算階乘
     c_type power(const c_type &, const c_type &);    //計算指數(只有正整數的次方數)
+    bool is_factorial_overflow(const c_type &); //階層是否超出上限
     bool is_special(const std::string &, Special &);    //是否為特殊字句
     void print_special(const Special &);    //印出特殊字句的特殊輸出
 
