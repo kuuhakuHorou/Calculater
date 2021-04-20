@@ -180,8 +180,8 @@ bool Calculater::is_wrong(const std::string &expr) {
         if (this->is_operator(expr[i]) && expr[i] != '|') { //是運算元且不是絕對值
             int n = i;
             unsigned m = i;
-            while (--n > 0 && (this->is_space(expr[n]) || expr[n] == ')')); //嘗試找出前面的數字
-            while (++m < expr.size() && (this->is_space(expr[m]) || expr[m] == '('));   //嘗試找出後面的數字
+            while (--n > 0 && (this->is_space(expr[n]) || expr[n] == ')' || expr[n] == '|')); //嘗試找出前面的數字
+            while (++m < expr.size() && (this->is_space(expr[m]) || expr[m] == '(' || expr[m] == '|'));   //嘗試找出後面的數字
             if (n < 0) {    //當i為0時，有可能是整數
                 if (this->is_integer(expr[i], '\0', (i + 1 > expr.size())? '\0': expr[i+1])) {
                     continue;
@@ -217,7 +217,7 @@ bool Calculater::is_wrong(const std::string &expr) {
                         continue;
                     }
                 }
-                else if ((this->is_number(expr[n]) || expr[n] == '!' || expr[n] == '|' || front_have_ans)
+                else if ((this->is_number(expr[n]) || expr[n] == '!' || front_have_ans)
                       && (this->is_number(expr[m]) || this->is_integer(expr[m], expr[m-1], ((m + 1) > expr.size())? '\0': expr[m+1]) || back_have_ans)) {
                     //其他的運算子前如果是數字或階層或絕對值或ans和後面是數字或整數或ans，沒問題
                     continue;
@@ -477,13 +477,13 @@ unsigned Calculater::infix_to_postfix(std::vector<std::string> &result, const st
 
 //運算後綴式的結果
 c_type Calculater::calcul_postfix(const std::vector<std::string> &exprs) {
-/*    //debugger
+    //debugger
     for (std::string expr: exprs) { //查看分解的情況時用
         expr.push_back(' ');
         std::cout << expr;
     }
     std::cout << std::endl;
-*/
+
     static std::stack<c_type> numbers;  //利用stack儲存運算元
     static std::stringstream Num;   //利用stringstream轉換數字
     while (!numbers.empty()) {  //清空上次的運算結果
