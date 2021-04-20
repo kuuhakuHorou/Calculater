@@ -109,7 +109,12 @@ c_type Calculater::op_calculate(char calcul, const c_type &front, const c_type &
             res = this->factorial(front) / this->factorial(front - back);
             break;
         case '|':   //絕對值
-            res = abs(front);
+            if (front < 0) {
+                res = -front;
+            }
+            else {
+                res = front;
+            }
             break;
     }
     return res;
