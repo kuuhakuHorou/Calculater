@@ -9,6 +9,8 @@
 
 不過要小心的是，不小心**輸入錯誤**的話就會跳出**錯誤訊息**喔!  
 
+這裡有個[線上的編輯器](https://replit.com/@kuuhakuHorou/Calculater#README.md)，可以用線上試試，不用下載。
+
 # Change Log
 
 1. 1.0.1 update (2021/4/20 19:30)
