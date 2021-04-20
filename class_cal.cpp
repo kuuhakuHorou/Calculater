@@ -42,7 +42,7 @@ bool Calculater::string_calculate(std::string &user_input, c_type &result) {
     }
     else if (user_input != "exit") {    //不是退出就繼續
         this->combine(user_input);  //先過濾無用的+,-和括號
-        std::cout << user_input << std::endl; //debugger
+        //std::cout << user_input << std::endl; //debugger
         if (this->is_wrong(user_input)) {   //判斷輸入有無錯誤
             this->warning_message();    //告知錯誤
             this->print_dash(); //顯示分隔線
@@ -516,13 +516,13 @@ unsigned Calculater::infix_to_postfix(std::vector<std::string> &result, const st
 
 //運算後綴式的結果
 c_type Calculater::calcul_postfix(const std::vector<std::string> &exprs) {
-    //debugger
+/*    //debugger
     for (std::string expr: exprs) { //查看分解的情況時用
         expr.push_back(' ');
         std::cout << expr;
     }
     std::cout << std::endl;
-
+*/
     static std::stack<c_type> numbers;  //利用stack儲存運算元
     static std::stringstream Num;   //利用stringstream轉換數字
     while (!numbers.empty()) {  //清空上次的運算結果
