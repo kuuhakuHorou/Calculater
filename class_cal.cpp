@@ -205,11 +205,12 @@ bool Calculater::is_wrong(const std::string &expr) {
                 bool back_have_ans = (expr[m] == 'a' && expr.substr(m, 3) == "ans")? true: false;
                 if (expr[i] == '+' || expr[i] == '-') { //運算子為+,-
                     //看看是不是整數
-                    bool is_integer = this->is_integer(expr[i], ((i - 1) < 0)? '\0': expr[i-1], ((i + 1) > expr.size())? '\0': expr[i+1]);
-                    if ((this->is_number(expr[n]) || front_have_ans) && (this->is_number(expr[m]) || back_have_ans)) { //前後都是數字or ans，沒問題
+                    bool now_is_integer = this->is_integer(expr[i], ((i - 1) < 0)? '\0': expr[i-1], ((i + 1) > expr.size())? '\0': expr[i+1]);
+                    bool back_is_integer = this->is_integer(expr[m], expr[m-1], ((m + 1) > expr.size()? '\0': expr[m+1]));
+                    if ((this->is_number(expr[n]) || front_have_ans) && (this->is_number(expr[m]) || back_is_integer || back_have_ans)) { //前後都是數字or ans，沒問題
                         continue;
                     }
-                    else if ((this->is_operator(expr[n]) || expr[n] == '(') && is_integer) {
+                    else if ((this->is_operator(expr[n]) || expr[n] == '(') && now_is_integer) {
                         //前面為運算子或左括號或ans且i為整數，也沒問題
                         continue;
                     }
@@ -482,13 +483,13 @@ unsigned Calculater::infix_to_postfix(std::vector<std::string> &result, const st
 
 //運算後綴式的結果
 c_type Calculater::calcul_postfix(const std::vector<std::string> &exprs) {
-/*    //debugger
+    //debugger
     for (std::string expr: exprs) { //查看分解的情況時用
         expr.push_back(' ');
         std::cout << expr;
     }
     std::cout << std::endl;
-*/
+
     static std::stack<c_type> numbers;  //利用stack儲存運算元
     static std::stringstream Num;   //利用stringstream轉換數字
     while (!numbers.empty()) {  //清空上次的運算結果
