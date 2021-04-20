@@ -1,2 +1,0 @@
-language = "cpp"
-run = "g++ main.cpp -o main class_cal.cpp && ./main"
