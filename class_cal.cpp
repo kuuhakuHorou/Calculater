@@ -180,7 +180,7 @@ bool Calculator::is_wrong(const std::string &expr) {
         else if (expr[i] == '|') {  //有絕對值的符號，絕對值位置儲存
             abs.push_back(i);
         }
-        else if (!not_expression && this->is_number(expr[i])) {    //有數字的話會是算式
+        else if (this->is_number(expr[i])) {    //有數字的話會是算式
             not_expression = false;
         }
         else if (expr[i] == 'a' && expr.substr(i, 3) == "ans") {    //算式裡有ans
@@ -192,7 +192,7 @@ bool Calculator::is_wrong(const std::string &expr) {
             }
             i += 2; //跳過"ans"
         }
-        else if (this->ops.find(expr[i]) == this->ops.end()) {  //沒有的運算元，不會有功能
+        else if (!not_operation && this->ops.find(expr[i]) == this->ops.end()) {  //沒有的運算元，不會有功能，且不需重新檢查
             not_operation = true;
         }
         if (this->is_operator(expr[i]) && expr[i] != '|') { //是運算元且不是絕對值
