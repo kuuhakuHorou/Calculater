@@ -4,11 +4,11 @@
 #include <map>
 
 #ifndef _CLASS_CAL_H_
-#define _CLASS_CAL_H_   //避免再次定義class Calculater
+#define _CLASS_CAL_H_   //避免再次定義class Calculator
 
 using c_type = long long;   //利用c_type指定運算值的類型(無法使用浮點數(%運算))
 
-class Calculater {
+class Calculator {
 private:
 
     //特殊字句
@@ -63,10 +63,10 @@ private:
     void print_special(const Special &);    //印出特殊字句的特殊輸出
 
 public:
-    Calculater();   //一般建構式
-    Calculater(bool);   //呼叫一般建構式並設定first_calculate
+    Calculator();   //一般建構式
+    Calculator(bool);   //呼叫一般建構式並設定first_calculate
     bool string_calculate(std::string &, c_type &);    //呼叫運算式分解並計算
-    c_type op_calculate(char, const c_type &, const c_type &back = 0);  //呼叫運算元做計算
+    c_type op_calculate(char, const c_type &front = 0, const c_type &back = 0);  //呼叫運算元做計算
     bool is_exit(); //檢查是否須離開
     static void m_delay(int);  //以毫秒為單位的延遲
     static void print_dash();  //印出分行(----)
