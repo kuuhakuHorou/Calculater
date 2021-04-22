@@ -205,7 +205,7 @@ bool Calculator::is_wrong(const std::string &expr) {
                 m++;
             };
             if (n < 0) {    //當i為第一個運算子且前面沒東西時，有可能是整數或後面為'('或'|'
-                if (expr[i] == '+' && expr[i] == '-') {
+                if (expr[i] == '+' || expr[i] == '-') {
                     for (m = i + 1; m < expr.size() && this->is_space(expr[m]); m++);
                     if (this->is_integer(expr[i], '\0', (i + 1 > expr.size())? '\0': expr[i+1]) || expr[m] == '|' || expr[m] == '(') {
                         continue;
