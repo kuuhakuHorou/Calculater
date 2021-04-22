@@ -26,7 +26,7 @@
 
 不過要小心的是，不小心**輸入錯誤**的話就會跳出**錯誤訊息**喔!  
 
-這裡有個[線上的編輯器](https://replit.com/@kuuhakuHorou/Calculater)，可以用線上試試，不用下載。
+這裡有個[線上的編輯器](https://replit.com/@kuuhakuHorou/Calculator "replit.com")，可以用線上試試，不用下載。
 
 ## Bug report
 有發現的bug需要把輸入的運算式一起回報，這樣找起來才會更快。
