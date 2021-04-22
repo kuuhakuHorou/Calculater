@@ -204,10 +204,12 @@ bool Calculator::is_wrong(const std::string &expr) {
             while (m < expr.size() && (this->is_space(expr[m]) || expr[m] == '(' || expr[m] == '|')) {  //嘗試找出後面的數字
                 m++;
             };
-            if (n <= 0) {    //當i為第一個運算子且前面沒東西時，有可能是整數或後面為'('或'|'
-                for (m = i + 1; m < expr.size() && this->is_space(expr[m]); m++);
-                if (this->is_integer(expr[i], '\0', (i + 1 > expr.size())? '\0': expr[i+1]) || expr[m] == '|' || expr[m] == '(') {
-                    continue;
+            if (n < 0) {    //當i為第一個運算子且前面沒東西時，有可能是整數或後面為'('或'|'
+                if (expr[i] == '+' && expr[i] == '-') {
+                    for (m = i + 1; m < expr.size() && this->is_space(expr[m]); m++);
+                    if (this->is_integer(expr[i], '\0', (i + 1 > expr.size())? '\0': expr[i+1]) || expr[m] == '|' || expr[m] == '(') {
+                        continue;
+                    }
                 }
             }
             else if (m >= expr.size()) {
@@ -235,6 +237,12 @@ bool Calculator::is_wrong(const std::string &expr) {
                     }
                     else if (expr[n] == '!') {  //前面是階層也沒問題的拉
                         continue;
+                    }
+                    else {
+                        for (n = i - 1; n > 0 && this->is_space(expr[n]); n--);
+                        if (n == 0) {
+                            continue;
+                        }
                     }
                 }
                 else if (expr[i] == '!') {
@@ -590,9 +598,10 @@ c_type Calculator::factorial(const c_type &num) {
     }
     if (num == 0) return 1; //0! == 1
     c_type res = 1;
-    for (c_type i = 2; i <= num; i++) { //從2開始乘
+    for (c_type i = 2; i < this->op_calculate('|', num); i++) { //從2開始乘
         res *= i;
     }
+    res *= num;
     return res;
 }
 
@@ -608,14 +617,15 @@ c_type Calculator::power(const c_type &base, const c_type &times) {
 
 //階層是否超出上限
 bool Calculator::is_factorial_overflow(const c_type &num) {
+    c_type number = this->op_calculate('|', num);
     switch(sizeof(c_type)) {
         case sizeof(long long): //實測如果為8bytes，21!以上會超過上限
-            if (num > 20) {
+            if (number > 20) {
                 return true;
             }
             break;
         case sizeof(int):   //實測如果為4bytes，21!以上會超過上限
-            if (num > 10) {
+            if (number > 10) {
                 return true;
             }
     }
