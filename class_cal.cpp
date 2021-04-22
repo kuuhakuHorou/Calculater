@@ -69,7 +69,7 @@ bool Calculator::string_calculate(std::string &user_input, c_type &result) {
     return true;
 }
 
-//呼叫運算元做計算
+//呼叫運算子做計算
 c_type Calculator::op_calculate(char calcul, const c_type &front, const c_type &back) {
     c_type res = 0;
     switch (calcul) {
@@ -134,8 +134,8 @@ bool Calculator::is_wrong(const std::string &expr) {
     bool not_expression = true; //不是運算式
     bool not_operation = false; //不是運算子
     bool loss_something = false;    //少了什麼
-    bool first_calculate_want_ans = false;  //第一次就想要上次的 "ans"
-    bool empty_brackets = false;
+    bool first_calculate_want_ans = false;  //第一次就想要上次的"ans"
+    bool empty_brackets = false;    //空的括號
     int brackets = 0;   //括弧數
     std::vector<unsigned> abs;   //絕對值的位置
     unsigned left_bracket = 0;  //左邊括號所在處
@@ -148,7 +148,7 @@ bool Calculator::is_wrong(const std::string &expr) {
             while (!this->is_number(expr[n]) && n < expr.size()) {  //找出除法(取餘)的除數
                 n++;
             }
-            Num.str("");
+            Num.str("");    //清除NumS
             Num.clear();
             while (this->is_number(expr[n]) && i < expr.size()) {   //找出所有的數字
                 Num << expr[n++]; //存入Num裡
@@ -162,20 +162,42 @@ bool Calculator::is_wrong(const std::string &expr) {
             }
         }
         else if (expr[i] == '(') {  //有左括號，括號數減1
-            left_bracket = i;
             brackets--;
+            left_bracket = i;   //記下左括號的位置
+            int n = i - 1;
+            while (n > 0 && (this->is_space(expr[n]) || expr[n] == '(' || expr[n] == '|')) {
+                //嘗試尋找前面的運算子
+                n--;
+            }
+            if (n <= 0) {   //前面沒東西，跳過
+                continue;
+            }
+            else if (!this->is_operator(expr[n])) { //前面不是運算子的話，一定少了些什麼
+                loss_something = true;
+            }
         }
         else if (expr[i] == ')') {  //有右括號，括號數加1
+            brackets++;
             if (!empty_brackets) {  //如有空括號，不用重複檢查
                 unsigned n = left_bracket + 1;
                 while (n < i && this->is_space(expr[i])) {  //檢查裡面是否為空
                     n++;
                 }
-                if (n == i) {
+                if (n == i) {   //裡面為空
                     empty_brackets = true;
                 }
             }
-            brackets++;
+            unsigned n = i + 1;
+            while (n < expr.size() && (this->is_space(expr[n]) || expr[n] == ')' || expr[n] == '|')) {
+                //嘗試尋找後面的運算子
+                n++;
+            }
+            if (n >= expr.size()) { //後面沒東西，跳過
+                continue;
+            }
+            else if (!this->is_operator(expr[n])) { //後面不是運算子，應該少了些什麼
+                loss_something = true;
+            }
         }
         else if (expr[i] == '|') {  //有絕對值的符號，絕對值位置儲存
             abs.push_back(i);
@@ -187,15 +209,13 @@ bool Calculator::is_wrong(const std::string &expr) {
             if (this->first_calculate) {    //第一次計算不會有答案
                 first_calculate_want_ans = true;
             }
-            else {
-                not_expression = false;
-            }
+            not_expression = false;
             i += 2; //跳過"ans"
         }
-        else if (!not_operation && this->ops.find(expr[i]) == this->ops.end()) {  //沒有的運算元，不會有功能，且不需重新檢查
+        else if (!not_operation && this->ops.find(expr[i]) == this->ops.end()) {  //沒有的運算子，不會有功能，且不需重新檢查
             not_operation = true;
         }
-        if (this->is_operator(expr[i]) && expr[i] != '|') { //是運算元且不是絕對值
+        if (this->is_operator(expr[i]) && expr[i] != '|') { //是運算子且不是絕對值
             int n = i - 1;
             unsigned m = i + 1;
             while (n > 0 && (this->is_space(expr[n]) || expr[n] == ')' || expr[n] == '|')) {    //嘗試找出前面的數字
@@ -204,22 +224,23 @@ bool Calculator::is_wrong(const std::string &expr) {
             while (m < expr.size() && (this->is_space(expr[m]) || expr[m] == '(' || expr[m] == '|')) {  //嘗試找出後面的數字
                 m++;
             };
-            if (n < 0) {    //當i為第一個運算子且前面沒東西時，有可能是整數或後面為'('或'|'
-                if (expr[i] == '+' || expr[i] == '-') {
-                    for (m = i + 1; m < expr.size() && this->is_space(expr[m]); m++);
+            if (n < 0) {    //當i為第一個運算子且前面沒東西時
+                if (expr[i] == '+' || expr[i] == '-') { //如果i的位置為'+'或'-'
+                    for (m = i + 1; m < expr.size() && this->is_space(expr[m]); m++);   //跳過i後面的空格
                     if (this->is_integer(expr[i], '\0', (i + 1 > expr.size())? '\0': expr[i+1]) || expr[m] == '|' || expr[m] == '(') {
+                        //如果i此處為整數或後面為'|'或'('
                         continue;
                     }
                 }
             }
-            else if (m >= expr.size()) {
-                if (expr.size() > 1) {
+            else if (m >= expr.size()) {    //如果i為最後的字元
+                if (expr.size() > 1) {  //確保不是只有'!'
                     if (expr[i] == '!') {   //最後為階層運算子也沒錯
                         continue;
                     }
                 }
             }
-            else if (this->is_operator(expr[i])) {  //當i為運算子時
+            else {  //當i為運算子時
                 //看看前或後是不是答案
                 bool front_have_ans = (expr[n] == 's' && expr.substr(n - 2, 3) == "ans")? true: false;
                 bool back_have_ans = (expr[m] == 'a' && expr.substr(m, 3) == "ans")? true: false;
@@ -228,7 +249,8 @@ bool Calculator::is_wrong(const std::string &expr) {
                 if (expr[i] == '+' || expr[i] == '-') { //運算子為+,-
                     //看看是不是整數
                     bool now_is_integer = this->is_integer(expr[i], ((i - 1) < 0)? '\0': expr[i-1], ((i + 1) > expr.size())? '\0': expr[i+1]);
-                    if ((this->is_number(expr[n]) || front_have_ans) && (this->is_number(expr[m]) || back_is_integer || back_have_ans)) { //前後都是數字or ans，沒問題
+                    if ((this->is_number(expr[n]) || front_have_ans) && (this->is_number(expr[m]) || back_is_integer || back_have_ans)) {
+                        //前後都是數字or ans，沒問題
                         continue;
                     }
                     else if ((this->is_operator(expr[n]) || expr[n] == '(') && now_is_integer) {
@@ -240,13 +262,14 @@ bool Calculator::is_wrong(const std::string &expr) {
                     }
                     else {
                         for (n = i - 1; n > 0 && this->is_space(expr[n]); n--);
+                        //前面都是空格，沒問題的
                         if (n == 0) {
                             continue;
                         }
                     }
                 }
                 else if (expr[i] == '!') {
-                    if (this->is_operator(expr[m])) {   //階層後面有個運算元很正常
+                    if (this->is_operator(expr[m])) {   //階層後面有個運算子很正常
                         continue;
                     }
                 }
@@ -365,90 +388,96 @@ void Calculator::to_lower(std::string &s) {
 //合併不需要的括號與正負號
 void Calculator::combine(std::string &expr) {
     static std::string front, back;    //暫存用的字串
-    for (unsigned i = 0; i < expr.size(); i++) {
+    for (int i = 0; i < (int)expr.size(); i++) {
         switch (expr[i]) {
             case '+':
             case '-':
-            {
-                front.clear();  //先清一下，避免問題
-                back.clear();
-                unsigned n = i + 1;
-                while (n < expr.size() && is_space(expr[n])) {    //跳過空白字元且小心超出儲存空間
-                    n++;
-                }
-                unsigned m = n + 1;
-                if (m >= expr.size() || n >= expr.size()) { //超過儲存空間，不管了
-                    continue;
-                }
-                if (!is_space(expr[m])) {   //略過空白後的第二個字元不為空白
-                    switch (expr[i]) {
-                        case '+':   //當前為+
-                            switch (expr[n]) {
-                                case '+':   //當第一個字元為+
-                                    this->combine_add_sub(expr, front, back, i, n, '+');    //++得+
-                                    i++;    //跳到第二個字元
-                                    break;
-                                case '-':   //當第一個字元為-
-                                    this->combine_add_sub(expr, front, back, i, n, '-');    //+-得-
-                                    i++;    //跳到第二個字元
-                                    break;
-                            }
-                            break;
-                        case '-':   //當前為-
-                            switch (expr[n]) {
-                                case '+':   //當第一個字元為+
-                                    this->combine_add_sub(expr, front, back, i, n, '-');    //-+得-
-                                    i++;    //跳到第二個字元
-                                    break;
-                                case '-':   //當第一個字元為-
-                                    this->combine_add_sub(expr, front, back, i, n, '+');    //--得+
-                                    i++;    //跳到第二個字元
-                                    break;
-                            }
-                            break;
+                {
+                    front.clear();  //先清一下，避免問題
+                    back.clear();
+                    unsigned n = i + 1;
+                    while (n < expr.size() && is_space(expr[n])) {    //跳過空白字元且小心超出儲存空間
+                        n++;
                     }
-                }
-            }
-                break;
-            case '(':
-            {
-                front.clear();  //先清一下，避免問題
-                back.clear();
-                unsigned n = i + 1;
-                //跳過整數和空白且不超過字串的長度-1
-                while (n < expr.size() - 1 && (this->is_number(expr[n]) || this->is_integer(expr[n], expr[n-1], expr[n+1]) || this->is_space(expr[n]))) {
-                    n++;
-                }
-                if (expr[n] == ')') {   //若此處為右括號
-                    unsigned m = i + 1;
-                    while (m < n && this->is_space(expr[m])) {  //查看中間是否只有空白
-                        m++;
-                    }
-                    if (m == n) {   //是的話跳過後面繼續迴圈
+                    unsigned m = n + 1;
+                    if (m >= expr.size() || n >= expr.size()) { //超過儲存空間，不管了
                         continue;
                     }
-                    int k = i - 1;
-                    while (k > 0 && this->is_space(expr[k])) {
-                        k--;
-                    }
-                    front = expr.substr(0, i);  //從0到i分割expr
-                    back = expr.substr(i + 1, n - i - 1);   //從i+1分割到n-i-1
-                    if (expr[k] != '-' && expr[k] != '+') {
-                        front.append(" ");
-                    }
-                    front.append(back).append(" "); //接在一起
-                    back.clear();   //清一下
-                    if (n < expr.size() - 1) {  //若後面還有
-                        back = expr.substr(n + 1);  //接到最後面
-                        front.append(back); //再接在一起
-                    }
-                    expr.clear();   //清空expr
-                    expr = std::move(front);   //讓結果給expr
-                    while (i > 1 && this->is_space(expr[i])) {  //要退回左括號的前面並跳過空格，但也不能少於0
-                        i--;
+                    if (!is_space(expr[m])) {   //略過空白後的第二個字元不為空白
+                        switch (expr[i]) {
+                            case '+':   //當前為+
+                                switch (expr[n]) {
+                                    case '+':   //當第一個字元為+
+                                        this->combine_add_sub(expr, front, back, i, n, '+');    //++得+
+                                        i++;    //跳到第二個字元
+                                        break;
+                                    case '-':   //當第一個字元為-
+                                        this->combine_add_sub(expr, front, back, i, n, '-');    //+-得-
+                                        i++;    //跳到第二個字元
+                                        break;
+                                }
+                                break;
+                            case '-':   //當前為-
+                                switch (expr[n]) {
+                                    case '+':   //當第一個字元為+
+                                        this->combine_add_sub(expr, front, back, i, n, '-');    //-+得-
+                                        i++;    //跳到第二個字元
+                                        break;
+                                    case '-':   //當第一個字元為-
+                                        this->combine_add_sub(expr, front, back, i, n, '+');    //--得+
+                                        i++;    //跳到第二個字元
+                                        break;
+                                }
+                                break;
+                        }
                     }
                 }
-            }
+                break;
+            case '(':
+                {
+                    front.clear();  //先清一下，避免問題
+                    back.clear();
+                    unsigned n = i + 1;
+                    //跳過整數和空白且不超過字串的長度-1
+                    while (n < expr.size() - 1 && (this->is_number(expr[n]) || this->is_integer(expr[n], expr[n-1], expr[n+1]) || this->is_space(expr[n]))) {
+                        n++;
+                    }
+                    if (expr[n] == ')') {   //若此處為右括號
+                        unsigned m = i + 1;
+                        while (m < n && this->is_space(expr[m])) {  //查看中間是否只有空白
+                            m++;
+                        }
+                        if (m == n) {   //是的話跳過後面繼續迴圈
+                            continue;
+                        }
+                        int k = i - 1;
+                        while (k > 0 && this->is_space(expr[k])) {  //跳過括號前面的空格
+                            k--;
+                        }
+                        front = expr.substr(0, i);  //從0到i分割expr
+                        back = expr.substr(i + 1, n - i - 1);   //從i+1分割到n-i-1
+                        if (k >= 0 && expr[k] != '+' && expr[k] != '-') {   //k沒超過儲存範圍且不為'+'和'-'
+                            front.append(" ");
+                        }
+                        front.append(back).append(" "); //接在一起
+                        back.clear();   //清一下
+                        if (n < expr.size() - 1) {  //若後面還有
+                            back = expr.substr(n + 1);  //接到最後面
+                            front.append(back); //再接在一起
+                        }
+                        expr.clear();   //清空expr
+                        expr = std::move(front);   //讓結果給expr
+                        do {
+                            i--;
+                        } while (i > 0 && this->is_space(expr[i])); //要退回左括號的前面並跳過空格，但也不能少於0
+                        i--;    //再減一次，如果i為0的情況才能再從0開始
+                        if (i < -1) {   //i太小了，要加回-1
+                            while (i < -1) {
+                                i++;
+                            }
+                        }
+                    }
+                }
                 break;
         }
     }
@@ -564,18 +593,18 @@ c_type Calculator::calcul_postfix(const std::vector<std::string> &exprs) {
                 back = numbers.top();   //取出最上面的數儲存
                 numbers.pop();  //抽出
             }
-            if (!numbers.empty()) {
+            if (!numbers.empty()) { //確保不會超抽
                 front = numbers.top();  //再取一次
-                numbers.pop();
+                numbers.pop();  //抽出
             }
             numbers.push(this->op_calculate(expr[0], front, back)); //運算(後抽出的在前面(stack特性))並存回去
         }
         else if (this->is_operator(expr) && (this->operand[expr[0]] == 1)) {
             //expr為運算子且該需要的運算元為1
             c_type num = 0;
-            if (!numbers.empty()) {
-                num = numbers.top();
-                numbers.pop();
+            if (!numbers.empty()) { //確保不會超抽
+                num = numbers.top();    //取出最上面的數儲存
+                numbers.pop();  //抽出
             }
             numbers.push(this->op_calculate(expr[0], num)); //運算
         }
@@ -598,10 +627,11 @@ c_type Calculator::factorial(const c_type &num) {
     }
     if (num == 0) return 1; //0! == 1
     c_type res = 1;
-    for (c_type i = 2; i < this->op_calculate('|', num); i++) { //從2開始乘
+    //從2開始乘，乘到 |num|-1
+    for (c_type i = 2; i < this->op_calculate('|', num); i++) {
         res *= i;
     }
-    res *= num;
+    res *= num; //再乘num
     return res;
 }
 
