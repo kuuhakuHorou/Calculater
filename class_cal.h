@@ -37,7 +37,7 @@ private:
     bool wrong_brackets;    //錯誤的括號判斷
     bool wrong_expression;  //有少的運算子判斷
     bool wrong_input;       //錯誤的運算式判斷(沒有數字)
-    bool wrong_operation;   //沒有的運算元判斷
+    bool wrong_operation;   //沒有的運算子判斷
     bool brackets_have_nothing; //括號裡沒東西
     bool first_calculate;   //第一次的計算判斷
     bool have_answer;       //算是有無 ans
@@ -66,7 +66,7 @@ public:
     Calculator();   //一般建構式
     Calculator(bool);   //呼叫一般建構式並設定first_calculate
     bool string_calculate(std::string &, c_type &);    //呼叫運算式分解並計算
-    c_type op_calculate(char, const c_type &front = 0, const c_type &back = 0);  //呼叫運算元做計算
+    c_type op_calculate(char, const c_type &front = 0, const c_type &back = 0);  //呼叫運算子做計算
     bool is_exit(); //檢查是否須離開
     static void m_delay(int);  //以毫秒為單位的延遲
     static void print_dash();  //印出分行(----)
