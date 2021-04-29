@@ -463,7 +463,7 @@ Absolute_status Calculator::find_abs_status(const unsigned &pos) {
 //合併不需要的括號與正負號
 void Calculator::combine(std::string &expr) {
     static std::string front, back;    //暫存用的字串
-    bool is_change;
+    bool is_change = false;
     this->find_abs(expr);   //先搜尋絕對值
     for (int i = 0; i < (int)expr.size(); i++) {
         switch (expr[i]) {
