@@ -19,6 +19,6 @@ int main(void) {
 bool calculate(Calculator &c, c_type &res) {    //嘗試運算
     static std::string input;
     input.clear();  //清理上次的輸入
-    getline(std::cin, input);   //取得輸入(一行)
+    std::getline(std::cin, input);   //取得輸入(一行)
     return c.string_calculate(input, res);  //呼叫Calculator的string_calculate()
 }

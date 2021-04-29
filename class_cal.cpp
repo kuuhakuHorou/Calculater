@@ -9,7 +9,6 @@
 //一般建構式
 Calculator::Calculator() {
     this->absolute_status = 0;
-    this->divide_zero = false;
     this->lost_absolute = false;
     this->wrong_absolute_number = false;
     this->wrong_brackets_number = false;
@@ -106,14 +105,16 @@ c_type Calculator::op_calculate(char calcul, const c_type &front, const c_type &
             res = front * back;
             break;
         case '/':
-            if (back != 0) {
-                res = front / back;
+            if (back == 0) {
+                throw std::logic_error("有除以0，請更正");
             }
+            res = front / back;
             break;
         case '%':
-            if (back != 0) {
-                res = front % back;
+            if (back == 0) {
+                throw std::logic_error("有除以0，請更正");
             }
+            res = front % back;
             break;
         case '^':   //次方的運算
             res = this->power(front, back);
@@ -121,8 +122,11 @@ c_type Calculator::op_calculate(char calcul, const c_type &front, const c_type &
         case 'e':   //科學記號的算式
             res = front * this->power(10, back);
             break;
-        case '!':   //階層
-            res = this->factorial(front);
+        case '!':   //階乘
+            res = this->factorial(this->op_calculate('|',front));
+            if (front < 0) {    //對於前面加上負號的階乘
+                res *= -1;
+            }
             break;
         case 'c':   //組合
             if ((front - back) < 0) return 0;
@@ -153,7 +157,6 @@ bool Calculator::is_exit() {
 //檢查有無錯誤
 bool Calculator::is_wrong(const std::string &expr) {
     static std::stringstream Num;   //利用stringstream取得數字
-    bool divide_zero = false;   //除以0
     bool not_expression = true; //不是運算式
     bool not_operation = false; //不是運算子
     bool loss_something = false;    //少了什麼
@@ -166,22 +169,6 @@ bool Calculator::is_wrong(const std::string &expr) {
         if (this->is_space(expr[i])) {  //略過空白字元
             continue;
         }
-        else if (!divide_zero && (expr[i] == '/' || expr[i] == '%')) {    //是否為除法(取餘數)，如有除0的情況不用重新檢查
-            unsigned n = i + 1;
-            for (; n < expr.size() && !this->is_number(expr[n]); n++);   //找出除法(取餘)的除數
-            Num.str("");    //清除NumS
-            Num.clear();
-            while (this->is_number(expr[n]) && i < expr.size()) {   //找出所有的數字
-                Num << expr[n++]; //存入Num裡
-            }
-            if (Num.str().size() > 0) { //Num裡有數字
-                c_type num;
-                Num >> num; //從Num裡輸出到數字
-                if (num == 0) {
-                    divide_zero = true; //有除以0的情況
-                }
-            }
-        }
         else if (expr[i] == '(') {
             brackets--; //有左括號，括號數減1
             left_bracket = i;   //記下左括號的位置
@@ -191,7 +178,7 @@ bool Calculator::is_wrong(const std::string &expr) {
                 continue;
             }
             else if (!((this->is_operator(expr[n]) && expr[n] != '!') || expr[n] == '(' || this->is_space(expr[n]))) {
-                //前面不是運算子且不含階層，或不是'('和空白，可能少了什麼
+                //前面不是運算子且不含階乘，或不是'('和空白，可能少了什麼
                 loss_something = true;
             }
         }
@@ -222,7 +209,7 @@ bool Calculator::is_wrong(const std::string &expr) {
                     continue;
                 }
                 else if (!((this->is_operator(expr[n]) && expr[n] != '!') || expr[n] == '(' || this->is_space(expr[n]))) {
-                    //前面不是運算子且不含階層，或不是'('和空白，可能少了什麼
+                    //前面不是運算子且不含階乘，或不是'('和空白，可能少了什麼
                     loss_something = true;
                 }
             }
@@ -266,7 +253,7 @@ bool Calculator::is_wrong(const std::string &expr) {
             }
             else if (m >= expr.size()) {    //如果i為最後的字元
                 if (expr.size() > 1) {  //確保不是只有'!'
-                    if (expr[i] == '!') {   //最後為階層運算子也沒錯
+                    if (expr[i] == '!') {   //最後為階乘運算子也沒錯
                         continue;
                     }
                 }
@@ -288,7 +275,7 @@ bool Calculator::is_wrong(const std::string &expr) {
                         //前面為運算子或左括號或ans且i為整數，也沒問題
                         continue;
                     }
-                    else if (expr[n] == '!') {  //前面是階層也沒問題的拉
+                    else if (expr[n] == '!') {  //前面是階乘也沒問題的拉
                         continue;
                     }
                     else {
@@ -300,17 +287,17 @@ bool Calculator::is_wrong(const std::string &expr) {
                     }
                 }
                 else if (expr[i] == '!') {
-                    if (this->is_operator(expr[m])) {   //階層後面有個運算子很正常
+                    if (this->is_operator(expr[m])) {   //階乘後面有個運算子很正常
                         continue;
                     }
                 }
                 else if ((this->is_number(expr[n]) || expr[n] == '!' || front_have_ans)
                       && (this->is_number(expr[m]) || back_is_integer || back_have_ans)) {
-                    //其他的運算子前如果是數字或階層或絕對值或ans和後面是數字或整數或ans，沒問題
+                    //其他的運算子前如果是數字或階乘或絕對值或ans和後面是數字或整數或ans，沒問題
                     continue;
                 }
                 else if (this->is_operator(expr[n]) || this->is_operator(expr[m])) {    //前後如果是運算子
-                    if (expr[i] == '!' || expr[n] == '!') { //自己或前面是階層，沒問題
+                    if (expr[i] == '!' || expr[n] == '!') { //自己或前面是階乘，沒問題
                         continue;
                     }
                 }
@@ -319,7 +306,6 @@ bool Calculator::is_wrong(const std::string &expr) {
         }
     }
     //更新狀態
-    this->divide_zero = divide_zero;
     this->wrong_absolute_number = (this->absolute_statuses.size() % 2 == 0)? false: true; //絕對值成雙，所以對2取餘數應為0
     this->lost_absolute = (this->absolute_status == 0)? false: true;
     this->wrong_brackets_number = (brackets == 0)? false: true;    //括號應成對，所以括號數應為0
@@ -329,16 +315,13 @@ bool Calculator::is_wrong(const std::string &expr) {
     this->brackets_have_nothing = empty_brackets;
     this->have_answer = first_calculate_want_ans;
     //回傳是否有錯誤(只要一個有就不該計算)
-    return divide_zero || this->wrong_brackets_number || this->wrong_absolute_number || this->lost_absolute || loss_something || not_expression || not_operation || empty_brackets || first_calculate_want_ans;
+    return this->wrong_brackets_number || this->wrong_absolute_number || this->lost_absolute || loss_something || not_expression || not_operation || empty_brackets || first_calculate_want_ans;
 }
 
 //錯誤訊息
 void Calculator::warning_message() {
     static std::vector<std::string> error_messages; //利用vector收集先找到的錯誤訊息
     error_messages.clear(); //清掉上次的訊息
-    if (this->divide_zero) {
-        error_messages.push_back("有除以0，請更正!!");
-    }
     if (this->wrong_absolute_number) {
         error_messages.push_back("絕對值的部分好像有錯");
     }
@@ -462,7 +445,7 @@ void Calculator::find_abs(const std::string &expr) {
             this->absolute_statuses[*it] = Absolute_status::Begin;
         }
         else {
-            if (this->is_number(expr[n]) || expr[n] == ')' || expr[n] == '!') { //如果絕對值的前面是數字或右括號或階層，為結束
+            if (this->is_number(expr[n]) || expr[n] == ')' || expr[n] == '!') { //如果絕對值的前面是數字或右括號或階乘，為結束
                 this->absolute_statuses[*it] = Absolute_status::End;
             }
             else {  //其他的話，為開始
@@ -480,6 +463,7 @@ Absolute_status Calculator::find_abs_status(const unsigned &pos) {
 //合併不需要的括號與正負號
 void Calculator::combine(std::string &expr) {
     static std::string front, back;    //暫存用的字串
+    bool is_change;
     this->find_abs(expr);   //先搜尋絕對值
     for (int i = 0; i < (int)expr.size(); i++) {
         switch (expr[i]) {
@@ -499,6 +483,7 @@ void Calculator::combine(std::string &expr) {
                     //檢查略過空白後的第二個字元是數字或左括號
                     bool back_no_problem = (this->is_number(expr[m]) || expr[m] == '(');
                     if (front_no_problem && back_no_problem) {  //前後都沒問題
+                        is_change = true;
                         front.clear();  //先清一下，避免問題
                         back.clear();
                         switch (expr[i]) {
@@ -547,6 +532,7 @@ void Calculator::combine(std::string &expr) {
                         }
                     }
                     if (this->is_plus_minus(expr[i-1])) { //如果左括號前面為正負號
+                        is_change = true;
                         int m = i - 2;
                         for (; m > 0 && this->is_space(expr[m]); m--);  //跳過前一格前面的空格
                         if (m < 0 || (this->is_operator(expr[m]) && expr[m] != '!' && expr[m] != '|')) {
@@ -568,6 +554,7 @@ void Calculator::combine(std::string &expr) {
                         }
                     }
                     else if (this->is_number(expr[i-1])) {  //如果左括號前是數字的話
+                        is_change = true;
                         front = expr.substr(0, i);  //從0分割expr到左括號前一格
                         back = expr.substr(i, n - i + 1);   //從左括號分割expr到配對的右括號
                         front.append("*").append(back); //先合併前面的
@@ -584,6 +571,7 @@ void Calculator::combine(std::string &expr) {
                 front.clear();  //先清一下，避免問題
                 back.clear();
                 if (i + 1 < (int)expr.size() && this->is_number(expr[i+1])) {   //如果i+1小於字串長度和右括號後面數字
+                    is_change = true;
                     front = expr.substr(0, i + 1);  //從0分割expr到右括號
                     back = expr.substr(i + 1);  //從右括號後面分割expr到最後
                     front.append("*").append(back); //front接上'*'和後面
@@ -613,6 +601,7 @@ void Calculator::combine(std::string &expr) {
                             }
                             unsigned n = it->first; //找到配對的絕對值的位置
                             if (this->is_plus_minus(expr[i-1])) {   //這之前是正負的話
+                                is_change = true;
                                 front = expr.substr(0, i - 1);  //從開頭切到此處的前兩格
                                 back = expr.substr(i, n - i + 1);   //從此處切到配對的絕對值
                                 if (expr[i-1] == '-') { //負的用括號確保先算
@@ -629,6 +618,7 @@ void Calculator::combine(std::string &expr) {
                                 expr = std::move(front);    //把合併結果還回給expr
                             }
                             else if (this->is_number(expr[i-1])) {  //這之前是數字的話
+                                is_change = true;
                                 front = expr.substr(0, i);  //從0分割expr到此處前一格
                                 back = expr.substr(i, n - i + 1);   //從此處分割expr到配對的絕對值
                                 front.append("*").append(back); //先合併前面的
@@ -645,6 +635,7 @@ void Calculator::combine(std::string &expr) {
                         front.clear();  //先清一下，避免問題
                         back.clear();
                         if (i + 1 < (int)expr.size() && this->is_number(expr[i+1])) {   //如果i+1小於字串長度和絕對值後面數字
+                            is_change = true;
                             front = expr.substr(0, i + 1);  //從0分割expr到絕對值
                             back = expr.substr(i + 1);  //從絕對值後面分割expr到最後
                             front.append("*").append(back); //front接上'*'和後面
@@ -652,8 +643,11 @@ void Calculator::combine(std::string &expr) {
                         }
                     }
                 }
-                this->find_abs(expr);   //更新絕對值狀態
                 break;
+        }
+        if (is_change) {
+            is_change = false;
+            this->find_abs(expr);   //更新絕對值狀態
         }
     }
 }
@@ -781,15 +775,14 @@ c_type Calculator::calcul_postfix(const std::vector<std::string> &exprs) {
 //計算階乘
 c_type Calculator::factorial(const c_type &num) {
     if (this->is_factorial_overflow(num)) {
-        throw std::overflow_error("階層超過可以接受的上限了");
+        throw std::overflow_error("階乘超過可以接受的上限了");
     }
     if (num == 0) return 1; //0! == 1
     c_type res = 1;
-    //從2開始乘，乘到 |num|-1
-    for (c_type i = 2; i < this->op_calculate('|', num); i++) {
+    //從2開始乘，乘到num
+    for (c_type i = 2; i <= num; i++) {
         res *= i;
     }
-    res *= num; //再乘num
     return res;
 }
 
@@ -803,7 +796,7 @@ c_type Calculator::power(const c_type &base, const c_type &times) {
     return res;
 }
 
-//階層是否超出上限
+//階乘是否超出上限
 bool Calculator::is_factorial_overflow(const c_type &num) {
     c_type number = this->op_calculate('|', num);
     switch(sizeof(c_type)) {

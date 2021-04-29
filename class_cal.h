@@ -40,7 +40,6 @@ private:
     std::map<unsigned, Absolute_status> absolute_statuses; //用於儲存絕對值的狀態
 
     int absolute_status;    //絕對值的狀態以整數儲存
-    bool divide_zero;   //有除以零的判斷
     bool lost_absolute; //缺少的絕對值判斷
     bool wrong_absolute_number;    //錯誤的絕對值數判斷
     bool wrong_brackets_number;    //錯誤的括號判斷
@@ -70,7 +69,7 @@ private:
     c_type calcul_postfix(const std::vector<std::string> &);   //運算後綴式的結果
     c_type factorial(const c_type &);     //計算階乘
     c_type power(const c_type &, const c_type &);    //計算指數(只有正整數的次方數)
-    bool is_factorial_overflow(const c_type &); //階層是否超出上限
+    bool is_factorial_overflow(const c_type &); //階乘是否超出上限
     bool is_special(const std::string &, Special &);    //是否為特殊字句
     void print_special(const Special &);    //印出特殊字句的特殊輸出
 
