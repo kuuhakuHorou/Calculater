@@ -37,7 +37,7 @@ private:
        {"miku3939", Special::MIKU3939}, {"ouo", Special::OuO}, {"c8763", Special::C8763},
        {"48763", Special::C8763}, {"nekopara", Special::NEKOPARA},
     };
-    std::map<unsigned, Absolute_status> absolute_statuses; //用於儲存絕對值的狀態
+    std::map<size_t, Absolute_status> absolute_statuses; //用於儲存絕對值的狀態
 
     int absolute_status;    //絕對值的狀態以整數儲存
     bool lost_absolute; //缺少的絕對值判斷
@@ -58,14 +58,14 @@ private:
     bool is_operator(const std::string &);  //是否為擁有的運算子(std::string 型態)
     int pripority(char);    //查看運算子的優先度
     bool is_number(char);   //檢查是否為數字
-    bool is_integer(const std::string &, const unsigned &);  //檢查是否為數字(有正負數的情況)
+    bool is_integer(const std::string &, const size_t &);  //檢查是否為數字(有正負數的情況)
     bool is_space(char);    //檢查是否為空白(space與tab)
     void to_lower(std::string &);  //把運算式的所有字母轉為小寫
     void find_abs(const std::string &); //找出所有的絕對值並確認開始及結束
-    Absolute_status find_abs_status(const unsigned &);  //搜尋絕對值的狀態
+    Absolute_status find_abs_status(const size_t &);  //搜尋絕對值的狀態
     void combine(std::string &);    //合併不需要的括號與正負號
-    void combine_add_sub(std::string &, std::string &, std::string &, int, int, char);    //合併不需要的正負號
-    unsigned infix_to_postfix(std::vector<std::string> &, const std::string &, const c_type &, const unsigned start = 0, const char input_op = '\0');   //把輸入的運算式拆解成後綴式
+    void combine_add_sub(std::string &, std::string &, std::string &, const size_t &, const size_t &, char);    //合併不需要的正負號
+    size_t infix_to_postfix(std::vector<std::string> &, const std::string &, const c_type &, const size_t start = 0, const char input_op = '\0');   //把輸入的運算式拆解成後綴式
     c_type calcul_postfix(const std::vector<std::string> &);   //運算後綴式的結果
     c_type factorial(const c_type &);     //計算階乘
     c_type power(const c_type &, const c_type &);    //計算指數(只有正整數的次方數)
@@ -79,7 +79,7 @@ public:
     bool string_calculate(std::string &, c_type &);    //呼叫運算式分解並計算
     c_type op_calculate(char, const c_type &front = 0, const c_type &back = 0);  //呼叫運算子做計算
     bool is_exit(); //檢查是否須離開
-    static void m_delay(int);  //以毫秒為單位的延遲
+    static void m_delay(const unsigned);  //以毫秒為單位的延遲
     static void print_dash();  //印出分行(----)
 
 };
